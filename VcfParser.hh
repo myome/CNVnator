@@ -5,8 +5,8 @@
 #include <fstream>
 #include <string>
 #include <sstream>
-#include "vcf.h"
-#include "vcfutils.h"
+#include "htslib/vcf.h"
+#include "htslib/vcfutils.h"
 
 using namespace std;
 

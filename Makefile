@@ -1,27 +1,10 @@
 VERSION	       = v0.4.1
 
-override LIBS += -lz -lbz2 -lcurl -llzma -lreadline
+override LIBS += -lz -lbz2 -lcurl -llzma -lreadline -lbam -lhts -lCore -lRIO -lHist -lGraf -lGpad -lTree -lMathCore
 
-ifneq ($(wildcard $(ROOTSYS)/lib/root),)
-        ROOTLIBS = -L$(ROOTSYS)/lib/root -lCore -lRIO -lHist -lGraf -lGpad -lTree -lMathCore
-else
-        ROOTLIBS = -L$(ROOTSYS)/lib      -lCore -lRIO -lHist -lGraf -lGpad -lTree -lMathCore
-endif
-
-ifneq ($(wildcard $(ROOTSYS)/include/root),)
-        INC = -I$(ROOTSYS)/include/root -I$(SAMDIR)
-else
-        INC = -I$(ROOTSYS)/include      -I$(SAMDIR)
-endif
-
-SAMDIR = samtools
-SAMLIB = $(SAMDIR)/libbam.a
-HTSDIR = $(wildcard $(SAMDIR)/htslib*)
-HTSDIRI = $(HTSDIR)/htslib
-ifneq ($(HTSDIR),)
-        SAMLIB += $(HTSDIR)/libhts.a
-        INC    += -I$(HTSDIR) -I$(HTSDIRI)
-endif
+# TODO(James): Replace this with the typical autoconf method.
+INC := -I${INSTALL_PREFIX}/include
+LDD_PATH := ${INSTALL_PREFIX}/lib
 
 ifeq ($(OMP),no)
         $(info Compiling with NO parallel support)
@@ -63,7 +46,7 @@ SRCDIR	     = $(MAINDIR)/src
 all: cnvnator
 
 cnvnator: $(OBJS)
-	$(CXX) -o $@ $(OBJS) $(SAMLIB) $(LIBS) $(ROOTLIBS)
+	$(CXX) -o $@ $(OBJS) $(LIBS) -L$(LDD_PATH)
 
 $(OBJDIR)/%.o: %.cpp
 	@mkdir -p $(OBJDIR)

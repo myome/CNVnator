@@ -1,8 +1,20 @@
-FROM ubuntu:18.04
+FROM bitnami/minideb:buster as builder
+
+WORKDIR /root
 
 RUN apt update && apt install -y --no-install-recommends \
   ca-certificates \
   g++ \
+  bzip2 \
+  git \
+  autoconf \
+  libx11-dev \
+  libxpm-dev \
+  libxft-dev \
+  libxext-dev \
+  libssl-dev \
+  automake \
+  cmake \
   libbz2-dev \
   libcurl3-dev \
   libfreetype6-dev \
@@ -18,28 +30,54 @@ RUN apt update && apt install -y --no-install-recommends \
   curl \
  && rm -rf /var/lib/apt/lists/*
 
-RUN curl https://root.cern/download/root_v6.18.04.Linux-ubuntu18-x86_64-gcc7.4.tar.gz | \
- tar -C /opt -xzf -
+RUN mkdir install_root
 
-ENV PYTHONPATH=/opt/root/lib
+RUN git clone --branch v6-22-00-patches https://github.com/root-project/root.git root_src && \
+  mkdir root_src/build_dir && \
+  cd root_src/build_dir && \
+  cmake -DCMAKE_INSTALL_PREFIX=/root/install_root ../ && \
+  cmake --build . --target install -- -j $(nproc)
 
-RUN echo '/opt/root/lib' > /etc/ld.so.conf.d/root.conf \
- && ldconfig
+RUN cd /root
 
-RUN curl -L https://github.com/samtools/samtools/releases/download/1.9/samtools-1.9.tar.bz2 | \
- tar -C /tmp -xjf - \
- && cd /tmp/samtools-* \
- && make \
- && (cd htslib-* && make mostlyclean) \
- && make mostlyclean \
- && find /tmp -name test -type d -exec rm -rf {} +
+RUN git clone --recursive  https://github.com/samtools/htslib.git htslib && \
+  cd ./htslib && \
+  autoreconf -i && \
+  ./configure --prefix=/root/install_root && \
+  make -j $(nprocs) && \
+  make install
 
-COPY ./ /tmp/CNVnator
+RUN git clone https://github.com/jvanalstine/samtools.git samtools && \
+  cd ./samtools && \
+  git checkout feature/library_support && \
+  autoheader && \
+  autoconf -Wno-syntax && \
+  ./configure --prefix=/root/install_root && \
+  make -j $(nprocs) && \
+  make install
 
-RUN cd /tmp/CNVnator \
- && ln -s /tmp/samtools-* samtools \
- && ROOTSYS=/opt/root make \
- && mv cnvnator *.py *.pl /usr/local/bin \
- && mv pytools /usr/local/lib/python*/dist-packages \
- && cd - \
- && rm -rf /tmp/*
+
+
+RUN echo "/root/install_root/lib" >> /etc/ld.so.conf.d/root.conf && \
+  ldconfig
+
+COPY ./ /root/cnvnator
+RUN cd /root/cnvnator && \
+  INSTALL_PREFIX=/root/install_root make -j $(nproc) && \
+  cp ./cnvnator *.py *.pl /root/install_root/bin && \
+  cd /root
+
+FROM bitnami/minideb:buster
+COPY --from=builder /root/install_root/lib /usr/local/lib
+COPY --from=builder /root/install_root/include /usr/local/include
+COPY --from=builder /root/install_root/bin /usr/local/bin
+
+RUN apt update && apt install -y --no-install-recommends \
+  libreadline-dev \
+  libcurl3-dev \
+  libssl-dev \
+  libgomp1 \
+  libfreetype6-dev \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN ldconfig

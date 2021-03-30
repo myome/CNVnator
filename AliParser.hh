@@ -7,7 +7,7 @@
 using namespace std; 
 
 // Samtools includes
-#include "sam.h"
+#include "samtoolslib/sam.h"
 
 class AliParser
 {
