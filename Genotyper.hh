@@ -20,7 +20,7 @@ private:
 public:
   Genotyper(HisMaker *maker,TString file,int bin);
   void printGenotype(string chrom,int start,int end,
-		     bool useATcorr,bool useGCcorr);
+		     bool useATcorr,bool useGCcorr, bool isMale);
 
 private:
   double getReadCount(int start,int end);

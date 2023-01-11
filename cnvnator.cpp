@@ -120,7 +120,8 @@ int main(int argc,char *argv[])
   double over = 0.8;
   double deltaAF = 0.25;
   Genome *genome = NULL;
-  
+  bool isMale = false; // assume sample is a female 
+
   // vcf, idvar, mask option -rmchr -addchr
   bool rmchr=false,addchr=false;
   // baf option -hap -useid -nomask
@@ -222,6 +223,8 @@ int main(int argc,char *argv[])
       useGCcorr = false;
     } else if (option == "-at") {
       useATcorr = true;
+    } else if (option == "--male") {
+      isMale = true;
     } else if (option == "-genome") {
       if (index < argc)	genome = Genome::get(argv[index++]);
     } else if (option == "-d") {
@@ -387,7 +390,7 @@ int main(int argc,char *argv[])
     if (option == OPT_CALL) { // call
       unsigned int flag=(usemask?FLAG_USEMASK:0)|(useid?FLAG_USEID:0)|(useHaplotype?FLAG_USEHAP:0)|(useGCcorr?FLAG_GC_CORR:0);
       HisMaker maker(out_root_file,bin,useGCcorr,genome);
-      if(signal=="") maker.callSVs(chroms,n_chroms,useATcorr,useGCcorr,deltaAF);
+      if(signal=="") maker.callSVs(chroms,n_chroms,useATcorr,useGCcorr, isMale, deltaAF);
       else maker.callSVsSignal(bin,signal,flag,chroms,n_chroms,deltaAF);
     }
     if (option == OPT_CALLBAF) { // callbaf
@@ -398,7 +401,7 @@ int main(int argc,char *argv[])
     if (option == OPT_VIEW) { // view
       HisMaker maker(out_root_file,bin,useGCcorr,genome);
       TApplication theApp("App",0,0);
-      maker.view(root_files,n_root_files,useATcorr,useGCcorr);
+      maker.view(root_files,n_root_files,useATcorr,useGCcorr, isMale);
       theApp.Run();
     }
     if (option == OPT_VIEWER) { // viewer
@@ -411,7 +414,7 @@ int main(int argc,char *argv[])
     if (option == OPT_GENOTYPE) { // genotype
       HisMaker maker(out_root_file,bin,useGCcorr,genome);
       TApplication theApp("App",0,0);
-      maker.genotype(root_files,n_root_files,useATcorr,useGCcorr);
+      maker.genotype(root_files,n_root_files,useATcorr,useGCcorr, isMale);
       theApp.Run();
     }
     if (option == OPT_EVAL) { // eval

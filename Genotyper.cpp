@@ -13,7 +13,7 @@ Genotyper::Genotyper(HisMaker *maker,
 {}
 
 void Genotyper::printGenotype(string chr,int start,int end,
-			      bool useATcorr,bool useGCcorr)
+			      bool useATcorr,bool useGCcorr, bool isMale)
 {
   if (!_maker) return;
 
@@ -75,11 +75,10 @@ void Genotyper::printGenotype(string chr,int start,int end,
   }
 
   double scale = 2;
-  if (Genome::isSexChrom(chr))
-    if (_meanAll > 0 && _mean/_meanAll < 0.66) {
+  if (Genome::isSexChrom(chr) && isMale) {
       cout<<"Assuming male individual!"<<endl;
       scale = 1;
-    }
+  }
 
   double gen1 = -1,gen2 = -1;
   double av1 = (end - start + 1)*_mean/_bin;

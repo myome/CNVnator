@@ -173,7 +173,7 @@ public:
 		   bool exome = false,int range = 128);
   void partitionSignal(int bin, string signal, unsigned int flags, string *user_chroms,int n_chroms,bool skipMasked,bool exome,int range);
   void partitionSignal2D(int bin, string signal1, string signal2, unsigned int flags, string *user_chroms,int n_chroms,int range);
-  void callSVs(string *user_chroms,int n_chroms,bool useATcorr,bool useGCcorr,
+  void callSVs(string *user_chroms,int n_chroms,bool useATcorr,bool useGCcorr, bool isMale,
 	       double delta);
   void callSVsSignal(int bin, string signal, unsigned int flags,string *user_chroms,int n_chroms,double delta);
   void pe(string *bamss,int n_files,double over,double qual);
@@ -200,8 +200,8 @@ private:
   bool mergeLevels(double *level,int n_bins,double delta);
 
 public: // Viewing and genotyping
-  void view(string *files,int n_files,bool useATcorr,bool useGCcorr);
-  void genotype(string *files,int n_files,bool useATcorr,bool useGCcorr);
+  void view(string *files,int n_files,bool useATcorr,bool useGCcorr, bool isMale);
+  void genotype(string *files,int n_files,bool useATcorr,bool useGCcorr, bool isMale);
 
 private:
   void executeROOT(TString obj_class,TString class_fun,TString args);

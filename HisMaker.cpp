@@ -339,7 +339,7 @@ bool HisMaker::getRegionRight(double *level,int n_bins,int bin,
   return true;
 }
 
-void HisMaker::view(string *files,int n_files,bool useATcorr,bool useGCcorr)
+void HisMaker::view(string *files,int n_files,bool useATcorr,bool useGCcorr, bool isMale)
 {
   TTimer  *timer = new TTimer("gSystem->ProcessEvents();",50,kFALSE);
   TString input = "";
@@ -358,7 +358,7 @@ void HisMaker::view(string *files,int n_files,bool useATcorr,bool useGCcorr)
 	for (int i = 0;i < n_files;i++) {
 	  Genotyper gen(this,files[i],bin_size);
 	  gen.printGenotype(chrom.Data(),
-			    start.Atoi(),end.Atoi(),useATcorr,useGCcorr);
+			    start.Atoi(),end.Atoi(),useATcorr,useGCcorr, isMale);
 	}
       } else if (option == "print") {
 	int s = start.Atoi(), e = end.Atoi();
@@ -746,7 +746,7 @@ void HisMaker::drawHistogramsBAF(TString chrom,int start,int end,
 
 
 void HisMaker::genotype(string *files,int n_files,
-			bool useATcorr,bool useGCcorr)
+			bool useATcorr,bool useGCcorr, bool isMale)
 {
   Genotyper **gs = new Genotyper*[n_files];
   for (int i = 0;i < n_files;i++)
@@ -763,7 +763,7 @@ void HisMaker::genotype(string *files,int n_files,
 	for (int i = 0;i < n_files;i++)
 	  gs[i]->printGenotype(chrom.Data(),
 			       start.Atoi(),end.Atoi(),
-			       useATcorr,useGCcorr);
+			       useATcorr,useGCcorr, isMale);
       }
     }
     timer->TurnOn();
@@ -1142,7 +1142,7 @@ double HisMaker::gaussianEValue(double mean,double sigma,double *rd,
 }
 
 void HisMaker::callSVs(string *user_chroms,int n_chroms,
-		       bool useATcorr,bool useGCcorr,double delta)
+		       bool useATcorr,bool useGCcorr, bool isMale, double delta)
 {
   string chr_names[N_CHROM_MAX] = {""};
   if (user_chroms == NULL && n_chroms != 0) {
@@ -1158,7 +1158,7 @@ void HisMaker::callSVs(string *user_chroms,int n_chroms,
       cerr<<"Can't find any histograms."<<endl;
       return;
     }
-    callSVs(chr_names,n_chroms,useATcorr,useGCcorr,delta);
+    callSVs(chr_names,n_chroms,useATcorr,useGCcorr, isMale, delta);
     return;
   }
 
@@ -1202,9 +1202,13 @@ void HisMaker::callSVs(string *user_chroms,int n_chroms,
     if (rd_his_global) {
       double mean_global,sigma_global;
       getMeanSigma(rd_his_global,mean_global,sigma_global);
-      if (mean < 0.66*mean_global) { // For male individuals
+      if (Genome::isSexChrom(chrom)) {
+      if (isMale) { // For male individuals
 	cerr<<"Assuming male individual!"<<endl;
 	cut = 2*cut;
+      } else {
+        cerr <<"Assuming female individual!" << endl;
+      }
       }
     }
 
